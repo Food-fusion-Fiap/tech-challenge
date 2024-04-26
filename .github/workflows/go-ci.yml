@@ -33,19 +33,31 @@ jobs:
         run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
 
       - name: Run golangci-lint
-        run: golangci-lint run ./... || true
+        run: |
+          OUTPUT=$(golangci-lint run ./... 2>&1) || true
+          echo "$OUTPUT"
+          test -z "$OUTPUT"  # Fail if there's any output
+          exit 0
 
       - name: Install go-staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
       - name: Run go-staticcheck
-        run: staticcheck ./... || true
+        run: |
+          OUTPUT=$(staticcheck ./... 2>&1) || true
+          echo "$OUTPUT"
+          test -z "$OUTPUT"  # Fail if there's any output
+          exit 0
 
       - name: Install gosec
         run: go install github.com/securego/gosec/cmd/gosec@latest
 
       - name: Run gosec
-        run: gosec -exclude=G104 ./... || true
+        run: |
+          OUTPUT=$(gosec -exclude=G104 ./... 2>&1) || true
+          echo "$OUTPUT"
+          test -z "$OUTPUT"  # Fail if there's any output
+          exit 0
 
       - name: Test
         run: go test ./...
