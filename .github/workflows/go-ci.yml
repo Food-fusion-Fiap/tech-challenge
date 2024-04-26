@@ -2,9 +2,9 @@ name: Go CI/CD
 
 on:
   push:
-    branches:
-      - master
-      - feature/devops-ci-pipe
+    branches: [master, feature/devops-ci-pipe]
+  pull_request:
+    branches: [master]
 
 jobs:
   ci:
@@ -30,9 +30,9 @@ jobs:
         run: go test ./...
 
       - name: Install golint
-        run: go get -u golang.org/x/lint/golint
+        run: go install golang.org/x/lint/golint@latest
 
-      - name: Lint
+      - name: Run golint
         run: golint ./...
 
       - name: Security Scan
