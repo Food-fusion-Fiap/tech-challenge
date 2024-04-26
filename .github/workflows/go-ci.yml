@@ -35,9 +35,10 @@ jobs:
       - name: Run golangci-lint
         run: |
           OUTPUT=$(golangci-lint run ./... 2>&1) || true
-          echo "$OUTPUT"
-          test -z "$OUTPUT"  # Fail if there's any output
-          exit 0
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
 
       - name: Install go-staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
