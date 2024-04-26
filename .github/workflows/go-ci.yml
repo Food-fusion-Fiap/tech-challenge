@@ -29,10 +29,11 @@ jobs:
       - name: Test
         run: go test ./...
 
+      - name: Install golint
+        run: go get -u golang.org/x/lint/golint
+
       - name: Lint
-        run: |
-          go get -u golang.org/x/lint/golint
-          golint ./...
+        run: golint ./...
 
       - name: Security Scan
         run: |
