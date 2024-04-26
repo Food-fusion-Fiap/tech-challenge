@@ -35,7 +35,8 @@ jobs:
       - name: Run golint
         run: golint ./...
 
-      - name: Security Scan
-        run: |
-          go get -u github.com/securego/gosec/cmd/gosec
-          gosec -exclude=G104 ./...
+      - name: Install gosec
+        run: go get -u github.com/securego/gosec/cmd/gosec
+
+      - name: Run gosec
+        run: gosec -exclude=G104 ./...
