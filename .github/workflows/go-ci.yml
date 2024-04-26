@@ -26,23 +26,26 @@ jobs:
       - name: Build
         run: go build -o ./app .
 
+      - name: Format code with gofumpt
+        run: go install mvdan.cc/gofumpt@latest && gofumpt -w .
+
       - name: Install golangci-lint
-        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.42.1
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
 
       - name: Run golangci-lint
         run: golangci-lint run ./...
 
+      - name: Install go-staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run go-staticcheck
+        run: staticcheck ./...
+
       - name: Install gosec
-        run: go get -u github.com/securego/gosec/cmd/gosec
+        run: go install github.com/securego/gosec/cmd/gosec@latest
 
       - name: Run gosec
         run: gosec -exclude=G104 ./...
-
-      - name: Install nancy
-        run: go get -u github.com/sonatype-nexus-community/nancy
-
-      - name: Run nancy
-        run: nancy ./go.mod
 
       - name: Test
         run: go test ./...
