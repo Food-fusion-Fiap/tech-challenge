@@ -98,21 +98,16 @@ jobs:
 
       - name: Install kubectl
         run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -sSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
+          sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubectl
 
       - name: Update kube config
         run: aws eks update-kubeconfig --name tech-challenge
-
-      - name: Create kubeconfig file
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
-        shell: bash
 
       - name: Deploy to Kubernetes
         run: |
           kubectl set image deployment/group-18-fastfood-backend group-18-fastfood-backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
           kubectl rollout status deployment/group-18-fastfood-backend
-        env:
-          KUBECONFIG: kubeconfig
