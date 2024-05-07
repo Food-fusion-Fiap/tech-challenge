@@ -102,7 +102,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} ${CONTAINER_NAME}=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
-          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
+          kubectl set image deployment/group-18-fastfood-backend group-18-fastfood-backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
+          kubectl rollout status deployment/group-18-fastfood-backend
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
