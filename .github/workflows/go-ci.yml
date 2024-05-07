@@ -104,8 +104,9 @@ jobs:
 
       - name: Create kubeconfig file
         run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode | \
-          jq '.users[0].user.exec.args += ["--interactive-mode", "Never"]' > kubeconfig
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
+          jq '.users[0].user.exec.args += ["--interactive-mode", "Never"]' kubeconfig > kubeconfig_updated
+          mv kubeconfig_updated kubeconfig
         shell: bash
 
       - name: Deploy to Kubernetes
