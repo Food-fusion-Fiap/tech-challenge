@@ -64,33 +64,45 @@ jobs:
 
       - name: Test
         run: go test ./...
-#  build-and-push:
-#    name: CD Pipeline
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#
-#      - name: Login to AWS ECR
-#        uses: aws-actions/amazon-ecr-login@v1
-#        with:
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#          aws-region: ${{ secrets.AWS_REGION }}
-#
-#      - name: Set up Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: '1.16'
-#
-#      - name: Build, tag, and push Docker image to AWS ECR
-#        run: |
-#          IMAGE_URI=your-account-id.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/your-repo-name
-#          IMAGE_TAG=${{ github.sha }}
-#          docker build -t $IMAGE_URI:$IMAGE_TAG .
-#          docker push $IMAGE_URI:$IMAGE_TAG
-#
-#      - name: Output the image tag
-#        run: echo "Deployed image tag ${{ github.sha }}"
+  build-and-deploy:
+    needs: ci
+    name: continuous delivery pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push Docker image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -sSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} ${CONTAINER_NAME}=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
+          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
