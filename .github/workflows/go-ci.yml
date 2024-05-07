@@ -64,9 +64,10 @@ jobs:
 
       - name: Test
         run: go test ./...
+
   build-and-deploy:
     needs: ci
-    name: continuous delivery pipeline
+    name: Continuous Delivery Pipeline
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -103,7 +104,7 @@ jobs:
 
       - name: Create kubeconfig file
         run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode | sed 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1/' > kubeconfig
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode | sed 's/"v1alpha1"/"v1"/' | sed '/command: aws/a \ \ \ \ interactiveMode: Never' > kubeconfig
         shell: bash
 
       - name: Deploy to Kubernetes
