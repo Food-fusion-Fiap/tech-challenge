@@ -101,9 +101,14 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
+      - name: Create kubeconfig file
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
+        shell: bash
+
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/group-18-fastfood-backend group-18-fastfood-backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
-          kubectl rollout status deployment/group-18-fastfood-backend
+          kubectl set image deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} ${CONTAINER_NAME}=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
+          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
         env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          KUBECONFIG: kubeconfig
