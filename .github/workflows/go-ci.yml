@@ -102,9 +102,12 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
+      - name: Update kube config
+        run: aws eks update-kubeconfig --name tech-challenge
+
       - name: Create kubeconfig file
         run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode | sed 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1/' | sed '/command: aws/a \ \ \ \ interactiveMode: Never' > kubeconfig
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig
         shell: bash
 
       - name: Deploy to Kubernetes
