@@ -103,7 +103,7 @@ jobs:
 
       - name: Create kubeconfig file
         run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode | sed 's/"v1alpha1"/"v1"/' > kubeconfig
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode | sed 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1/' > kubeconfig
         shell: bash
 
       - name: Deploy to Kubernetes
