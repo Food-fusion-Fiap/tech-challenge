@@ -111,4 +111,4 @@ jobs:
           kubectl set image deployment/group-18-fastfood-backend group-18-fastfood-backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
           kubectl rollout status deployment/group-18-fastfood-backend
         env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          KUBECONFIG: kubeconfig
