@@ -1,8 +1,6 @@
 name: Go CI/CD
 
 on:
-  push:
-    branches: [master, feature/devops-ci-pipe]
   pull_request:
     branches: [master]
 
