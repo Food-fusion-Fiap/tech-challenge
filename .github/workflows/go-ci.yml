@@ -103,7 +103,7 @@ jobs:
           sudo mv kubectl /usr/local/bin/
 
       - name: Update kube config
-        run: aws eks update-kubeconfig --name tech-challenge --region us-east-1
+        run: aws eks update-kubeconfig --name ${{ secrets.AWS_EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
       - name: Deploy to Kubernetes
         env:
