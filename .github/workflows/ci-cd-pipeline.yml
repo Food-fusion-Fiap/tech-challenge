@@ -69,7 +69,6 @@ jobs:
         run: go test ./...
 
   build-and-deploy:
-    needs: ci
     name: Continuous Delivery Pipeline
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
