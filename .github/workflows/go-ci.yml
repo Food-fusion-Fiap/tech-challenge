@@ -111,6 +111,7 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
           K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
+          K8S_DEPLOYMENT_CONTAINER_NAME: ${{ secrets.K8S_DEPLOYMENT_CONTAINER_NAME }}
         run: |
-          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
+          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
           kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
