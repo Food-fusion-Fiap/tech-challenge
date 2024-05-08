@@ -2,7 +2,12 @@ name: Go CI/CD
 
 on:
   pull_request:
-    branches: [master]
+    types: [opened, synchronize, reopened]
+    branches:
+      - master
+  push:
+    branches:
+      - master
 
 jobs:
   ci:
