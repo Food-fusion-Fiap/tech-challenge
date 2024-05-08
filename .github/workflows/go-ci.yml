@@ -106,6 +106,10 @@ jobs:
         run: aws eks update-kubeconfig --name tech-challenge --region us-east-1
 
       - name: Deploy to Kubernetes
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           echo 'testando... ' $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           kubectl set image deployment/group-18-fastfood-backend group-18-fastfood-backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
