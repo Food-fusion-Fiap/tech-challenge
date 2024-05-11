@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: group-18-fastfood-backend
-        image: placeholder_repository_name
+        image: 744270020792.dkr.ecr.us-east-1.amazonaws.com/food-fusion-repo:0.1.0
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8080
