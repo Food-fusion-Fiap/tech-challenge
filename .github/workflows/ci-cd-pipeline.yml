@@ -1,18 +1,13 @@
 name: Go CI/CD
 
 on:
-  push:
-    branches: [master, feature/devops-ci-pipe]
   pull_request:
-    branches: [master]
-#on:
-#  pull_request:
-#    types: [opened, synchronize, reopened]
-#    branches:
-#      - master
-#  push:
-#    branches:
-#      - master
+    types: [opened, synchronize, reopened]
+    branches:
+      - master
+  push:
+    branches:
+      - master
 
 permissions:
   contents: write
@@ -21,7 +16,7 @@ jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-#    if: github.event_namme == 'pull_request'
+    if: github.event_namme == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -79,8 +74,7 @@ jobs:
   build-and-deploy:
     name: Continuous Delivery Pipeline
     runs-on: ubuntu-latest
-    needs: ci # remover quando finalizar os testes
-    #    if: github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
