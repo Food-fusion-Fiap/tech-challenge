@@ -126,12 +126,22 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ secrets.AWS_EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
       - name: Deploy to Kubernetes
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
-          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
-          K8S_DEPLOYMENT_CONTAINER_NAME: ${{ secrets.K8S_DEPLOYMENT_CONTAINER_NAME }}
+        run: |
+          kubectl apply -f ./infra/golang-app-deployment.yaml
+          kubectl rollout status ./infra/golang-app-deployment.yaml
+
+#      - name: Deploy to Kubernetes
+#        env:
+#          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+#          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+#          IMAGE_TAG: ${{ github.sha }}
+#          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
+#          K8S_DEPLOYMENT_CONTAINER_NAME: ${{ secrets.K8S_DEPLOYMENT_CONTAINER_NAME }}
+#        run: |
+#          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
+#          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
+
+      - name: Push new tag to GitHub
         run: |
           kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
           kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
