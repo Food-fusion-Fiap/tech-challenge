@@ -133,6 +133,8 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ secrets.AWS_EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
       - name: Deploy to Kubernetes
+        env:
+          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
         run: |
           kubectl apply -f ./infra
           kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
