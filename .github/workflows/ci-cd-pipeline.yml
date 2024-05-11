@@ -18,7 +18,7 @@ jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+#    if: github.event_namme == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -76,7 +76,7 @@ jobs:
   build-and-deploy:
     name: Continuous Delivery Pipeline
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+#    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
