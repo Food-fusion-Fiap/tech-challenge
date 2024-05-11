@@ -90,6 +90,17 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Calculate next tag
+        id: tagger
+        run: |
+          TAG="0.1.0"  # Initialize with the starting version
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
+          if [ ! -z "$LATEST_TAG" ]; then
+            TAG=$(echo $LATEST_TAG | awk -F. '{$NF+=1; OFS="."; print $0}')
+          fi
+          echo "Next tag: $TAG"
+          echo "::set-output name=next_tag::$TAG"      
+
       - name: Build, tag, and push Docker image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
