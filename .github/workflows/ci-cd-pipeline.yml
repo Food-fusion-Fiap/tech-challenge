@@ -134,7 +134,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f infra
+          kubectl apply -f infra/
           kubectl rollout status infra/golang-app-deployment.yaml
 
 #      - name: Deploy to Kubernetes
