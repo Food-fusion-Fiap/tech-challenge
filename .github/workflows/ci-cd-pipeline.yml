@@ -143,5 +143,7 @@ jobs:
 
       - name: Push new tag to GitHub
         run: |
-          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
-          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag ${{ steps.tagger.outputs.next_tag }}
+          git push origin ${{ steps.tagger.outputs.next_tag }}
