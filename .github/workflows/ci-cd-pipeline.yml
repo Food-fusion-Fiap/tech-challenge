@@ -121,6 +121,7 @@ jobs:
       - name: Update Kubernetes configuration
         run: |
           sed -i 's|placeholder_repository_name|'"$IMAGE_URI"'|' ./infra/golang-app-deployment.yaml
+          cat ./infra/golang-app-deployment.yaml
 
       - name: Install kubectl
         run: |
@@ -133,7 +134,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f ./infra/golang-app-deployment.yaml
+          kubectl apply -f ./infra
           kubectl rollout status ./infra/golang-app-deployment.yaml
 
 #      - name: Deploy to Kubernetes
