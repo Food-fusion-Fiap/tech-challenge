@@ -76,7 +76,8 @@ jobs:
   build-and-deploy:
     name: Continuous Delivery Pipeline
     runs-on: ubuntu-latest
-#    if: github.event_name == 'push'
+    needs: ci # remover quando finalizar os testes
+    #    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
