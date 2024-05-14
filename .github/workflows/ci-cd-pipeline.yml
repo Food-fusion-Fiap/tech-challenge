@@ -1,0 +1,156 @@
+name: Go CI/CD
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    name: CI Pipeline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.22.1
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -o ./app .
+
+      - name: Format code with gofumpt
+        run: go install mvdan.cc/gofumpt@latest && gofumpt -w .
+
+      - name: Install golangci-lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
+
+      - name: Run golangci-lint
+        run: |
+          OUTPUT=$(golangci-lint run ./... 2>&1) || true
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
+
+      - name: Install go-staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run go-staticcheck
+        run: |
+          OUTPUT=$(staticcheck ./... 2>&1) || true
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/cmd/gosec@latest
+
+      - name: Run gosec
+        run: |
+          OUTPUT=$(gosec -exclude=G104 ./... 2>&1) || true
+          if [[ -n "$OUTPUT" ]]; then
+            echo "golangci-lint found issues:"
+            echo "$OUTPUT"
+          fi
+
+      - name: Test
+        run: go test ./...
+
+  build-and-deploy:
+    name: Continuous Delivery Pipeline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Calculate next tag
+        id: tagger
+        run: |
+          TAG="0.1.0"  # Initialize with the starting version
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
+          if [ ! -z "$LATEST_TAG" ]; then
+            TAG=$(echo $LATEST_TAG | awk -F. '{$NF+=1; OFS="."; print $0}')
+          fi
+          echo "Next tag: $TAG"
+          echo "::set-output name=next_tag::$TAG"      
+
+      - name: Build, tag, and push Docker image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.tagger.outputs.next_tag }}
+        run: |
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+      - name: Update Kubernetes configuration
+        run: |
+          sed -i 's|placeholder_repository_name|'"$IMAGE_URI"'|' ./infra/golang-app-deployment.yaml
+          cat ./infra/golang-app-deployment.yaml
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -sSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Update kube config
+        run: aws eks update-kubeconfig --name ${{ secrets.AWS_EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to Kubernetes
+        env:
+          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
+        run: |
+          kubectl apply -f ./infra
+          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
+
+#      - name: Deploy to Kubernetes
+#        env:
+#          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+#          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+#          IMAGE_TAG: ${{ github.sha }}
+#          K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
+#          K8S_DEPLOYMENT_CONTAINER_NAME: ${{ secrets.K8S_DEPLOYMENT_CONTAINER_NAME }}
+#        run: |
+#          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_CONTAINER_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --record
+#          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
+
+      - name: Push new tag to GitHub
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag ${{ steps.tagger.outputs.next_tag }}
+          git push origin ${{ steps.tagger.outputs.next_tag }}
