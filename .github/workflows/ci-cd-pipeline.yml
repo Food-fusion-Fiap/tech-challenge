@@ -16,7 +16,7 @@ jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
