@@ -137,6 +137,8 @@ jobs:
       - name: Deploy to Kubernetes
         env:
           K8S_DEPLOYMENT_NAME: ${{ secrets.K8S_DEPLOYMENT_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           kubectl apply -f ./infra --validate=false
           kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
